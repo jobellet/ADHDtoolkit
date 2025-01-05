@@ -11,7 +11,6 @@
 ## Features
 
 - **Step-by-Step Task Management:** Simplify complex tasks by breaking them down into manageable steps.
-- **CSV/TSV Import:** Easily import your own task lists or recipes to tailor the toolkit to your needs.
 - **Progress Tracking:** Monitor your progress with visual indicators and time estimations.
 - **Internationalization:** Support for multiple languages with easy switching via intuitive language selectors.
 - **Clean and Organized Interface:** Focus on one task at a time to minimize distractions and enhance productivity.
