@@ -1,10 +1,3 @@
-### `easycook/README.md`
-
-This README provides specific information about the **EasyCook** tool, including its purpose, features, usage instructions, and any other relevant details.
-
-#### **Content for `easycook/README.md`:**
-
-```markdown
 # EasyCook
 
 **EasyCook** is a web-based tool designed to help individuals with ADHD manage cooking recipes efficiently. It breaks down recipes into manageable steps, allowing users to track their progress and estimate time effectively.
