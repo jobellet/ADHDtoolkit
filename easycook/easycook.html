@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title data-i18n="siteTitle">Recette Pas à Pas – Import JSON</title>
+  <style>
+    /* ===== RESET & BASE ===== */
+    * {
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f8ff;
+      margin: 20px;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: row;
+    }
+    h1, h2, h3, p {
+      color: #2c3e50;
+    }
+    h1, h2 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    /* ===== BARRE LATÉRALE ===== */
+    .sidebar {
+      width: 250px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-right: 20px;
+      height: fit-content;
+    }
+    .sidebar-section {
+      margin-bottom: 20px;
+    }
+    .sidebar-section h3 {
+      margin-bottom: 10px;
+      text-align: left;
+      color: #34495e;
+    }
+    .sidebar-section ul {
+      list-style-type: disc;
+      padding-left: 20px;
+      text-align: left;
+    }
+
+    /* ===== CONTENEUR PRINCIPAL ===== */
+    .main-container {
+      flex: 1;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+      position: relative;
+    }
+    .hidden { display: none; }
+
+    /* ===== ZONE DES DRAPEAUX ===== */
+    .language-switcher {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .language-switcher svg {
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .language-switcher svg:hover {
+      border-color: #777;
+    }
+
+    /* ===== IMPORT JSON ===== */
+    .import-section {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .import-section label {
+      display: inline-block;
+      margin-bottom: 5px;
+    }
+    .import-section input[type="file"] {
+      display: inline-block;
+    }
+    .btn-reload {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 5px 10px;
+      cursor: pointer;
+      color: #fff;
+      background: #2ecc71;
+      border: none;
+      border-radius: 5px;
+    }
+    .btn-reload:hover {
+      background: #27ae60;
+    }
+
+    /* ===== INFORMATIONS DE TEMPS ===== */
+    .time-info {
+      margin-bottom: 20px;
+      font-size: 1em;
+      color: #34495e;
+      text-align: center;
+    }
+    .time-info span {
+      display: block;
+      margin: 5px 0;
+    }
+
+    /* ===== STEP ACTUELLE ===== */
+    .step-title {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .step-time {
+      font-size: 0.9em;
+      color: #7f8c8d;
+      margin-bottom: 15px;
+    }
+    .progress-bar-container {
+      position: relative;
+      width: 100%;
+      height: 10px;
+      background: #e0e0e0;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .progress-bar-fill {
+      position: absolute;
+      left: 0; top: 0;
+      height: 100%;
+      width: 0%;
+      background: #3498db;
+      transition: width linear;
+    }
+
+    /* ===== BOUTON : ETAPE TERMINEE ===== */
+    .btn-finish-step {
+      display: inline-block;
+      padding: 10px 15px;
+      background: #3498db;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      margin-bottom: 20px;
+    }
+    .btn-finish-step:hover {
+      background: #2980b9;
+    }
+
+    /* ===== BOUTON : OUVRIR MODAL ===== */
+    .btn-open-modal {
+      position: fixed;
+      right: 30px;
+      bottom: 30px;
+      width: 50px;
+      height: 50px;
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.5em;
+      text-align: center;
+      line-height: 50px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    .btn-open-modal:hover {
+      background: #c0392b;
+    }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      left: 0; top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 10px;
+      max-width: 400px;
+      width: 90%;
+      padding: 20px;
+      position: relative;
+    }
+    .modal-content h2 {
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .modal-close {
+      position: absolute;
+      right: 15px;
+      top: 15px;
+      background: transparent;
+      border: none;
+      font-size: 1.2em;
+      cursor: pointer;
+    }
+    .modal-step-list {
+      max-height: 300px;
+      overflow-y: auto;
+      margin: 15px 0;
+    }
+    .modal-step-item {
+      margin-bottom: 5px;
+      font-size: 0.95em;
+    }
+    .progress-percent {
+      font-weight: bold;
+      margin-top: 15px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- BARRE LATÉRALE POUR INGRÉDIENTS ET USTENSILES -->
+  <div class="sidebar">
+    <!-- SECTION INGREDIENTS -->
+    <div class="sidebar-section" id="ingredientsSection">
+      <h3 data-i18n="ingredientsTitle">Ingrédients</h3>
+      <ul id="ingredientsList">
+        <!-- Liste des ingrédients sera injectée ici -->
+      </ul>
+    </div>
+    <!-- SECTION USTENSILES -->
+    <div class="sidebar-section" id="utensilsSection">
+      <h3 data-i18n="utensilsTitle">Ustensiles</h3>
+      <ul id="utensilsList">
+        <!-- Liste des ustensiles sera injectée ici -->
+      </ul>
+    </div>
+  </div>
+
+  <!-- CONTENEUR PRINCIPAL -->
+  <div class="main-container">
+    <!-- ZONE DES DRAPEAUX -->
+    <div class="language-switcher">
+      <!-- Drapeau Français -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2" id="flagFR" aria-label="Français" role="img">
+        <rect width="1" height="2" fill="#0055A4"/>
+        <rect x="1" width="1" height="2" fill="#FFFFFF"/>
+        <rect x="2" width="1" height="2" fill="#EF4135"/>
+      </svg>
+      <!-- Drapeau Anglais (Union Jack) - Corrected -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2" id="flagEN" aria-label="English" role="img">
+        <!-- Blue background -->
+        <rect width="3" height="2" fill="#012169"/>
+        <!-- White diagonals -->
+        <path d="M0,0 L3,2 M3,0 L0,2" stroke="#FFFFFF" stroke-width="0.3"/>
+        <!-- Red diagonals -->
+        <path d="M0.2,0 L3,1.8 M3,0.2 L0,1.8 M0.2,2 L3,-0.2 M3,1.8 L0,0.2" stroke="#C8102E" stroke-width="0.2"/>
+        <!-- White horizontal and vertical lines -->
+        <path d="M0,1 L3,1 M1.5,0 L1.5,2" stroke="#FFFFFF" stroke-width="0.3"/>
+        <!-- Red horizontal and vertical lines -->
+        <path d="M0.5,1 L2.5,1 M1.5,0.5 L1.5,1.5" stroke="#C8102E" stroke-width="0.2"/>
+      </svg>
+      <!-- Drapeau Allemand -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2" id="flagDE" aria-label="Deutsch" role="img">
+        <rect width="3" height="0.6667" y="0" fill="#000000"/>
+        <rect width="3" height="0.6667" y="0.6667" fill="#DD0000"/>
+        <rect width="3" height="0.6667" y="1.3333" fill="#FFCE00"/>
+      </svg>
+      <!-- Drapeau Espagnol -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2" id="flagES" aria-label="Español" role="img">
+        <rect width="3" height="0.6667" y="0" fill="#AA151B"/>
+        <rect width="3" height="0.6667" y="0.6667" fill="#F1BF00"/>
+        <rect width="3" height="0.6667" y="1.3333" fill="#AA151B"/>
+      </svg>
+    </div>
+
+    <h1 data-i18n="siteTitle">Recette Pas à Pas (Import JSON)</h1>
+
+    <div class="container">
+      <!-- SECTION D'IMPORT DE FICHIER -->
+      <div class="import-section">
+        <label for="fileInput" data-i18n="importLabel"><strong>Importer votre fichier JSON :</strong></label><br/>
+        <input type="file" id="fileInput" accept=".json" />
+        <button id="btnReload" class="btn-reload" data-i18n="reloadBtn">Recharger la Recette</button>
+      </div>
+
+      <!-- INFORMATIONS DE TEMPS -->
+      <div id="timeInfo" class="time-info hidden">
+        <span id="totalTime" data-i18n="totalTimeLabel">Temps Total Estimé : 0s</span>
+        <span id="remainingTime" data-i18n="remainingTimeLabel">Temps Restant Estimé : 0s</span>
+      </div>
+
+      <!-- STEP CONTAINER (on n’affiche qu’une étape à la fois) -->
+      <div id="stepContainer" tabindex="0" class="hidden"></div>
+
+      <!-- BOUTON "ETAPE TERMINEE" -->
+      <button id="btnFinishStep" class="btn-finish-step hidden" data-i18n="finishStepBtn">Étape Terminée</button>
+    </div>
+
+    <!-- BOUTON POUR OUVRIR LE MODAL -->
+    <button id="btnOpenModal" class="btn-open-modal hidden" aria-label="Ouvrir la progression">≡</button>
+
+    <!-- MODAL OVERLAY -->
+    <div id="modalOverlay" class="modal-overlay">
+      <div class="modal-content">
+        <button id="modalClose" class="modal-close" aria-label="Fermer">X</button>
+        <h2 data-i18n="progressTitle">Progression</h2>
+        <div id="progressInfo" class="progress-percent">Progression: 0%</div>
+        <div id="stepList" class="modal-step-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /*********************************************************
+     * 0) TRADUCTIONS (FR, EN, DE, ES)
+     *********************************************************/
+    const translations = {
+      fr: {
+        siteTitle: "Recette Pas à Pas (Import JSON)",
+        importLabel: "Importer votre fichier JSON :",
+        reloadBtn: "Recharger la Recette",
+        finishStepBtn: "Étape Terminée",
+        progressTitle: "Progression",
+        totalTimeLabel: "Temps Total Estimé",
+        remainingTimeLabel: "Temps Restant Estimé",
+        recipeFinished: "Recette Terminée !",
+        ingredientsTitle: "Ingrédients",
+        utensilsTitle: "Ustensiles",
+        noSteps: "Aucune étape à afficher.",
+        openProgress: "Ouvrir la progression",
+        close: "Fermer",
+        stepLabel: "Étape",
+        progressLabel: "Progression",
+        pleaseSelectFile: "Veuillez sélectionner un fichier JSON d'abord.",
+        noIngredients: "Aucun ingrédient.",
+        noUtensils: "Aucun ustensile."
+      },
+      en: {
+        siteTitle: "Step-by-Step Recipe (Import JSON)",
+        importLabel: "Import your JSON file:",
+        reloadBtn: "Reload Recipe",
+        finishStepBtn: "Step Completed",
+        progressTitle: "Progress",
+        totalTimeLabel: "Total Estimated Time",
+        remainingTimeLabel: "Remaining Estimated Time",
+        recipeFinished: "Recipe Completed!",
+        ingredientsTitle: "Ingredients",
+        utensilsTitle: "Utensils",
+        noSteps: "No steps to display.",
+        openProgress: "Open Progress",
+        close: "Close",
+        stepLabel: "Step",
+        progressLabel: "Progress",
+        pleaseSelectFile: "Please select a JSON file first.",
+        noIngredients: "No ingredients.",
+        noUtensils: "No utensils."
+      },
+      de: {
+        siteTitle: "Schritt-für-Schritt Rezept (JSON-Import)",
+        importLabel: "Importieren Sie Ihre JSON-Datei:",
+        reloadBtn: "Rezept neu laden",
+        finishStepBtn: "Schritt abgeschlossen",
+        progressTitle: "Fortschritt",
+        totalTimeLabel: "Geschätzte Gesamtzeit",
+        remainingTimeLabel: "Verbleibende geschätzte Zeit",
+        recipeFinished: "Rezept abgeschlossen!",
+        ingredientsTitle: "Zutaten",
+        utensilsTitle: "Utensilien",
+        noSteps: "Keine Schritte zum Anzeigen.",
+        openProgress: "Fortschritt öffnen",
+        close: "Schließen",
+        stepLabel: "Schritt",
+        progressLabel: "Fortschritt",
+        pleaseSelectFile: "Bitte wählen Sie zuerst eine JSON-Datei aus.",
+        noIngredients: "Keine Zutaten.",
+        noUtensils: "Keine Utensilien."
+      },
+      es: {
+        siteTitle: "Receta Paso a Paso (Importar JSON)",
+        importLabel: "Importa tu archivo JSON:",
+        reloadBtn: "Recargar Receta",
+        finishStepBtn: "Paso Completado",
+        progressTitle: "Progreso",
+        totalTimeLabel: "Tiempo Total Estimado",
+        remainingTimeLabel: "Tiempo Restante Estimado",
+        recipeFinished: "¡Receta Completada!",
+        ingredientsTitle: "Ingredientes",
+        utensilsTitle: "Ustensilios",
+        noSteps: "No hay pasos para mostrar.",
+        openProgress: "Abrir Progreso",
+        close: "Cerrar",
+        stepLabel: "Paso",
+        progressLabel: "Progreso",
+        pleaseSelectFile: "Por favor, selecciona primero un archivo JSON.",
+        noIngredients: "Ningún ingrediente.",
+        noUtensils: "Ningún utensilio."
+      }
+    };
+
+    let currentLang = "fr"; // langue par défaut
+
+    function getTranslation(key) {
+      return translations[currentLang][key] || key;
+    }
+
+    function switchLanguage(lang) {
+      currentLang = lang;
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (translations[lang][key]) {
+          el.textContent = translations[lang][key];
+        }
+      });
+      // Mise à jour des labels de temps
+      updateTimeLabels();
+      // Mise à jour des sections de la barre latérale
+      updateSidebarSections();
+      // Mise à jour du bouton modal (si nécessaire)
+      document.getElementById("btnOpenModal").setAttribute("aria-label", getTranslation("openProgress"));
+      // Sauvegarder la langue préférée
+      localStorage.setItem('preferredLanguage', lang);
+    }
+
+    function updateTimeLabels() {
+      const totalTimeEl = document.getElementById("totalTime");
+      const remainingTimeEl = document.getElementById("remainingTime");
+      if (totalTimeEl && remainingTimeEl) {
+        const fragsTT = totalTimeEl.textContent.split(":");
+        const fragsRT = remainingTimeEl.textContent.split(":");
+        if (fragsTT.length >= 2) {
+          totalTimeEl.textContent = getTranslation("totalTimeLabel") + " : " + fragsTT[1].trim();
+        }
+        if (fragsRT.length >= 2) {
+          remainingTimeEl.textContent = getTranslation("remainingTimeLabel") + " : " + fragsRT[1].trim();
+        }
+      }
+    }
+
+    function updateSidebarSections() {
+      // Mise à jour des titres des sections
+      document.querySelector("#ingredientsSection h3").textContent = getTranslation("ingredientsTitle");
+      document.querySelector("#utensilsSection h3").textContent = getTranslation("utensilsTitle");
+    }
+
+    /*********************************************************
+     * SECTION DE VARIABLES ET FONCTIONS GLOBALES
+     *********************************************************/
+    let recipeName = "";           
+    let recipeSteps = [];          
+    let recipeIngredients = [];    
+    let recipeUtensils = [];       
+    let currentStepIndex = 0;      
+    let stepCompleted = [];        
+    let totalSteps = 0;            
+    let totalTime = 0;             
+    let remainingTime = 0;         
+
+    // Références DOM
+    const flagFR = document.getElementById("flagFR");
+    const flagEN = document.getElementById("flagEN");
+    const flagDE = document.getElementById("flagDE");
+    const flagES = document.getElementById("flagES");
+
+    const fileInput      = document.getElementById("fileInput");
+    const btnReload      = document.getElementById("btnReload");
+    const stepContainer  = document.getElementById("stepContainer");
+    const btnFinishStep  = document.getElementById("btnFinishStep");
+    const btnOpenModal   = document.getElementById("btnOpenModal");
+    const modalOverlay   = document.getElementById("modalOverlay");
+    const modalClose     = document.getElementById("modalClose");
+    const stepList       = document.getElementById("stepList");
+    const progressInfo   = document.getElementById("progressInfo");
+
+    const timeInfo       = document.getElementById("timeInfo");
+    const totalTimeEl    = document.getElementById("totalTime");
+    const remainingTimeEl= document.getElementById("remainingTime");
+
+    const ingredientsList = document.getElementById("ingredientsList");
+    const utensilsList = document.getElementById("utensilsList");
+
+    // Langue par défaut et chargement de la langue préférée
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedLang = localStorage.getItem('preferredLanguage');
+      if (savedLang && translations[savedLang]) {
+        switchLanguage(savedLang);
+      } else {
+        switchLanguage(currentLang);
+      }
+    });
+
+    /*********************************************************
+     * EVENEMENTS DRAPEAUX
+     *********************************************************/
+    flagFR.addEventListener("click", () => switchLanguage("fr"));
+    flagEN.addEventListener("click", () => switchLanguage("en"));
+    flagDE.addEventListener("click", () => switchLanguage("de"));
+    flagES.addEventListener("click", () => switchLanguage("es"));
+
+    /*********************************************************
+     * PARSER JSON
+     *********************************************************/
+    function parseJson(text) {
+      try {
+        const parsed = JSON.parse(text);
+        // Guarantee default structure in case some fields are missing
+        return {
+          name: parsed.name || "Sans Nom",
+          ingredients: parsed.ingredients || [],
+          utensils: parsed.utensils || [],
+          steps: parsed.steps || []
+        };
+      } catch (err) {
+        console.error("Invalid JSON file:", err);
+        alert(getTranslation("invalidJsonFile") || "Fichier JSON invalide.");
+        return {
+          name: "Sans Nom",
+          ingredients: [],
+          utensils: [],
+          steps: []
+        };
+      }
+    }
+
+    function formatTime(seconds) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      const parts = [];
+      if (h > 0) parts.push(`${h}h`);
+      if (m > 0) parts.push(`${m}m`);
+      parts.push(`${s}s`);
+      return parts.join(" ");
+    }
+
+    function initRecipe(data) {
+      recipeName = data.name;
+      recipeIngredients = data.ingredients;
+      recipeUtensils = data.utensils;
+      recipeSteps = data.steps;
+      totalSteps = recipeSteps.length;
+      stepCompleted = Array(totalSteps).fill(false);
+      currentStepIndex = 0;
+
+      // Calculate total time
+      totalTime = recipeSteps.reduce((acc, step) => acc + step.time, 0);
+      remainingTime = totalTime;
+
+      if (totalSteps > 0) {
+        document.title = recipeName;
+        document.querySelector('h1').textContent = recipeName;
+
+        // Display time information
+        timeInfo.classList.remove("hidden");
+        totalTimeEl.textContent = getTranslation("totalTimeLabel") + " : " + formatTime(totalTime);
+        remainingTimeEl.textContent = getTranslation("remainingTimeLabel") + " : " + formatTime(remainingTime);
+
+        // Render ingredients & utensils
+        renderIngredients();
+        renderUtensils();
+
+        // Show recipe steps
+        stepContainer.classList.remove("hidden");
+        btnFinishStep.classList.remove("hidden");
+        btnOpenModal.classList.remove("hidden");
+
+        renderCurrentStep();
+        updateModalContent();
+        stepContainer.focus();
+      } else {
+        stepContainer.classList.add("hidden");
+        btnFinishStep.classList.add("hidden");
+        btnOpenModal.classList.add("hidden");
+        stepContainer.innerHTML = `<p data-i18n="noSteps">${getTranslation("noSteps")}</p>`;
+      }
+    }
+
+    function renderIngredients() {
+      ingredientsList.innerHTML = "";
+      if (!recipeIngredients || recipeIngredients.length === 0) {
+        ingredientsList.innerHTML = `<li>${getTranslation("noIngredients")}</li>`;
+        return;
+      }
+      recipeIngredients.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = `${item.ingredient} - ${item.quantity}`;
+        ingredientsList.appendChild(li);
+      });
+    }
+
+    function renderUtensils() {
+      utensilsList.innerHTML = "";
+      if (!recipeUtensils || recipeUtensils.length === 0) {
+        utensilsList.innerHTML = `<li>${getTranslation("noUtensils")}</li>`;
+        return;
+      }
+      recipeUtensils.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = item.utensil;
+        utensilsList.appendChild(li);
+      });
+    }
+
+    // Load / reload file
+    fileInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      const data = parseJson(text);
+      initRecipe(data);
+    });
+
+    btnReload.addEventListener("click", async () => {
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const text = await file.text();
+        const data = parseJson(text);
+        initRecipe(data);
+      } else {
+        alert(getTranslation("pleaseSelectFile"));
+      }
+    });
+
+    // Étape Terminée
+    btnFinishStep.addEventListener("click", handleFinishStep);
+    stepContainer.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleFinishStep();
+      }
+    });
+
+    function handleFinishStep() {
+      if (currentStepIndex < totalSteps) {
+        stepCompleted[currentStepIndex] = true;
+        remainingTime -= recipeSteps[currentStepIndex].time;
+        currentStepIndex++;
+        if (currentStepIndex >= totalSteps) {
+          currentStepIndex = totalSteps - 1;
+        }
+        renderCurrentStep();
+        updateModalContent();
+        updateTimeInfo();
+      }
+    }
+
+    function renderCurrentStep() {
+      if (currentStepIndex < 0 || currentStepIndex >= totalSteps) {
+        stepContainer.innerHTML = `<h2 data-i18n="recipeFinished">${getTranslation("recipeFinished")}</h2>`;
+        btnFinishStep.style.display = "none";
+        remainingTime = 0;
+        updateTimeInfo();
+        return;
+      }
+      const step = recipeSteps[currentStepIndex];
+      stepContainer.innerHTML = `
+        <h2>${getTranslation("stepLabel")} ${currentStepIndex + 1} / ${totalSteps}</h2>
+        <div class="step-title">${step.step}</div>
+        <div class="step-time">${getTranslation("finishStepBtn")} : ${formatTime(step.time)}</div>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="currentProgressBar"></div>
+        </div>
+      `;
+      btnFinishStep.style.display = "inline-block";
+
+      const currentProgressBar = document.getElementById("currentProgressBar");
+      startProgressBar(currentProgressBar, step.time);
+
+      setTimeout(() => {
+        stepContainer.focus();
+      }, 0);
+    }
+
+    function startProgressBar(barElement, timeInSeconds) {
+      barElement.style.width = '0%';
+      barElement.style.transition = 'none';
+      void barElement.offsetWidth; // Trigger a reflow to restart transition
+      barElement.style.transition = `width ${timeInSeconds}s linear`;
+      barElement.style.width = '100%';
+    }
+
+    function openModal() {
+      modalOverlay.style.display = "flex";
+      updateModalContent();
+    }
+    function closeModal() {
+      modalOverlay.style.display = "none";
+    }
+    btnOpenModal.addEventListener("click", openModal);
+    modalClose.addEventListener("click", closeModal);
+
+    function updateModalContent() {
+      stepList.innerHTML = "";
+      if (recipeSteps.length === 0) {
+        progressInfo.textContent = getTranslation("progressLabel") + ": 0%";
+        return;
+      }
+      let completedCount = 0;
+      recipeSteps.forEach((step, index) => {
+        const item = document.createElement("div");
+        item.classList.add("modal-step-item");
+        const done = stepCompleted[index] ? "✓" : " ";
+        item.textContent = `${getTranslation("stepLabel")} ${index + 1}: ${done} ${step.step}`;
+        stepList.appendChild(item);
+        if (stepCompleted[index]) completedCount++;
+      });
+      const percent = ((completedCount / recipeSteps.length) * 100).toFixed(1);
+      progressInfo.textContent = `${getTranslation("progressLabel")}: ${percent}%`;
+    }
+
+    function updateTimeInfo() {
+      if (currentStepIndex < totalSteps) {
+        remainingTime = recipeSteps
+          .slice(currentStepIndex)
+          .reduce((acc, step) => acc + step.time, 0);
+      } else {
+        remainingTime = 0;
+      }
+      remainingTimeEl.textContent = getTranslation("remainingTimeLabel") + " : " + formatTime(remainingTime);
+    }
+
+    // Double-Clic / Double-Tap
+    let lastTap = 0;
+    document.addEventListener('dblclick', () => {
+      toggleNextStep();
+    });
+    document.addEventListener('touchend', (e) => {
+      const currentTime = new Date().getTime();
+      const tapLength = currentTime - lastTap;
+      if (tapLength < 500 && tapLength > 0) {
+        toggleNextStep();
+        e.preventDefault();
+      }
+      lastTap = currentTime;
+    });
+
+    function toggleNextStep() {
+      const uncheckedItems = recipeSteps
+        .map((step, index) => ({ step, index }))
+        .filter(item => !stepCompleted[item.index]);
+      if (uncheckedItems.length > 0) {
+        const nextItem = uncheckedItems[0];
+        stepCompleted[nextItem.index] = true;
+        remainingTime -= recipeSteps[nextItem.index].time;
+        currentStepIndex = nextItem.index + 1;
+        if (currentStepIndex >= totalSteps) {
+          currentStepIndex = totalSteps - 1;
+        }
+        renderCurrentStep();
+        updateModalContent();
+        updateTimeInfo();
+      }
+    }
+  </script>
+
+</body>
+</html>
