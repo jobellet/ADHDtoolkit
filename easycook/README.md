@@ -1,4 +1,4 @@
-### 3.2 `easycook/README.md`
+### `easycook/README.md`
 
 This README provides specific information about the **EasyCook** tool, including its purpose, features, usage instructions, and any other relevant details.
 
