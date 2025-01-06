@@ -2,6 +2,7 @@
 
 **EasyCook** is a web-based tool designed to assist individuals with ADHD in managing cooking recipes efficiently. By breaking down recipes into manageable steps, EasyCook helps users stay organized, track their progress, and estimate the time required for each task. The tool supports multiple languages and offers a clean, user-friendly interface to enhance productivity and minimize distractions.
 
+Use the following GPT to create the receipes: [easycookgpt]https://chatgpt.com/g/g-677a345d2b588191b054dee975393ba2-easycookgpt
 ## Features
 
 - **Step-by-Step Recipe Management:** Follow recipes one step at a time to avoid feeling overwhelmed.
